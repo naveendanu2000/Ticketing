@@ -1,0 +1,32 @@
+kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf
+use this command to create a secret object in Kubernetes, this key above is a JWT sign key, so that all of the services which need to access or manage the JWT token can use this.
+
+
+kubectl get secrets, to get all of the secret objects.
+
+RUN INGRESS
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.1/deploy/static/provider/cloud/deploy.yaml
+
+
+
+NATS streaming server for Event bus
+
+// horizontal scaling is creating more containers inside the pod.
+// vertical scaling is providing more resources to the same resource.
+
+// kubectl port-forward nats-depl-78c7655d67-sdvgs(change this with the nats pods name) 4222:4222 (for client) 
+// kubectl port-forward nats-depl-78c7655d67-sdvgs(change this with the nats pods name) 8222:8222 (for monitoring) 
+
+// queue groups are used, so that the different containers of the same service do not get the same event, which can result in Concurrency and Redundancy.
+
+// setManualAckMode(true) is used as an option in the subscription, so that if there is some difficulty in the event bus to use the event, say, it fails, the event will be lost, so to handle such scenarios, we setManualAckMode(true) so that the event can still be processed, when the service comes back up. It lets us acknowledge the event so that the nats-streaming-server stores the event unless we acknowledge the event.
+
+// we use the msg.ack() to send the acknowledgement to the nats-streaming-server.
+
+// http://localhost:8222/streaming/channelsz?subs=1 will give the information about the nats-streaming server running in you dev environment.
+
+// when one of the listeners are not connected to the nats-streaming-server, nats will wait for the listener to come back up, if it doesnot comes back up until a brief period of time.
+
+// setDeliverAllAvailable() delivers all the events that have ever happen to the services, when the services are restarted.
+// setDurableNames("name") sets the events as processed who have been acknowledged by the services, this will also dump all the event which have been processed, to tackle that we add the queue-group to the subscription, so that the data persists even if the nats-streaming-server is restarted.
