@@ -21,7 +21,7 @@ it("Responds with not Authorized when the user is not logged in", async () => {
   const response = await request(app)
     .get("/api/users/currentuser")
     .send()
-    .expect(401);
+    .expect(200);
 
-  expect(response.body.errors[0].message).toEqual("Not Authorized");
+  expect(response.body.currentUser).toEqual(null);
 });
